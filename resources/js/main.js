@@ -699,9 +699,11 @@ function initProductImage() {
     let color_btns = document.querySelectorAll(".color-option");
     let first_color = color_btns[0];
     let first_front_image = first_color.getAttribute("data-front-image");
-
+    state.current_image_url = first_front_image;
     selectedFrontImage = first_front_image;
     selectedBackImage = first_color.getAttribute("data-back-image");
+    state.front_image_url = first_front_image;
+    state.back_image_url = selectedBackImage;
 
     if (localStorage.getItem(first_front_image)) {
         let obj_state = localStorage.getItem(first_front_image);
@@ -740,6 +742,8 @@ function initProductImage() {
 
         canvas.sendToBack(img);
     });
+
+    save_state(state.current_image_url);
 }
 
 function sidebarHandler() {
@@ -937,7 +941,16 @@ function saveDesignAndImage(side, rand_key) {
         });
 
         removed_objects.forEach((obj) => {
-            canvas.add(obj);
+            obj.set({
+                selectable: false,
+                hasControls: false,
+                evented: false,
+                stay: true,
+                stay_when_pos: true,
+            });
+
+            originalAdd(obj);
+            canvas.renderAll();
         });
 
         try {
@@ -974,12 +987,14 @@ function clearOldDesigns(currentKey) {
 }
 
 function showButtons(rand_key) {
-    const preview_btn = document.querySelector("#previewDesign");
-    preview_btn.style.display = "block";
-    const previewURL = `${window.location.origin}/preview/${rand_key}`;
-    preview_btn.href = previewURL;
-    preview_btn.target = "_blank";
+    // show preview button
+    // const preview_btn = document.querySelector("#previewDesign");
+    // preview_btn.style.display = "block";
+    // const previewURL = `${window.location.origin}/preview/${rand_key}`;
+    // preview_btn.href = previewURL;
+    // preview_btn.target = "_blank";
 
+    // show add to cart button
     const add_to_cart_btn = document.querySelector("#addToCart");
     add_to_cart_btn.style.display = "block";
 }
@@ -1011,6 +1026,7 @@ function handleAddToCart() {
             formData.append("product_id", form.product_id);
             formData.append("v_hash", form.v_hash);
             formData.append("quantity", form.quantity);
+            formData.append("default_img", form.default_img);
 
             axios
                 .post("/cart", formData)
