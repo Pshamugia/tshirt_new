@@ -19,6 +19,7 @@ Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.destroy.all');
+Route::get('/cart/{id}', [CartController::class, 'show'])->name('cart.item.show');
 
 
 Route::get('/preview/{key}', [DesignController::class, 'preview'])->name('design.preview');

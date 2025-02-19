@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function checkVisitor() {
     let v_hash = localStorage.getItem("v_hash");
-
+    console.log(v_hash);
     if (!v_hash) {
         axios
             .post("/api/visitor")

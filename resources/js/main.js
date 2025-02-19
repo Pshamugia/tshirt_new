@@ -28,12 +28,14 @@ const form = {
     btns: cbtns,
 };
 
+let selectedFrontImage = "";
+let selectedBackImage = "";
+
 let active_text_obj = null;
 let designGroup;
 let originalAdd;
 
 export default function main() {
-    checkColorSelected();
     sidebarHandler();
     initCanvas();
     initForm();
@@ -70,21 +72,6 @@ function initForm() {
 }
 
 //****_________________________________________________________________________________________****//
-
-function checkColorSelected() {
-    let form = document.querySelector("#customizationForm");
-
-    let form_elements = Array.from(form.elements);
-
-    form_elements.forEach((el) =>
-        el.addEventListener("change", function (e) {
-            if (!color_chosen) {
-                alert("Please select a color first");
-                e.preventDefault();
-            }
-        })
-    );
-}
 
 function mapTextObjectsToFormInputs() {
     Object.keys(text_objects).forEach((key) => {
@@ -134,8 +121,6 @@ function resizeObserve() {
 }
 
 function handleImageSwapping() {
-    let selectedFrontImage = "";
-    let selectedBackImage = "";
     let colorSwitcherBtns = document.querySelectorAll(".color-option");
     colorSwitcherBtns.forEach((btn) => {
         btn.addEventListener("click", function () {
@@ -151,16 +136,10 @@ function handleImageSwapping() {
     });
 
     document.querySelector("#showFront").addEventListener("click", function () {
-        if (!selectedFrontImage) {
-            alert("Please, choose a color first");
-        }
         loadImage(selectedFrontImage, "pos");
     });
 
     document.querySelector("#showBack").addEventListener("click", function () {
-        if (!selectedBackImage) {
-            alert("Please, choose a color first");
-        }
         loadImage(selectedBackImage, "pos");
     });
 }
@@ -232,7 +211,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                 text_objects = {};
                 canvas.getObjects().forEach((obj) => {
                     console.info("Obj: ", obj);
-                    if (obj.type == 'rect') {
+                    if (obj.type == "rect") {
                         obj.set({
                             stay: true,
                             stay_when_pos: true,
@@ -243,10 +222,13 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                             lockScalingX: true,
                             lockScalingY: true,
                             lockRotation: true,
-                        })
+                        });
                     }
 
-                    if (obj._originalElement.src.includes("color")) {
+                    if (
+                        obj._originalElement &&
+                        obj._originalElement.src.includes("color")
+                    ) {
                         obj.set({
                             selectable: false,
                             hasControls: false,
@@ -259,6 +241,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
 
                     if (
                         obj.type == "image" &&
+                        obj._originalElement &&
                         obj._originalElement.src.includes("clipart")
                     ) {
                         obj.set({
@@ -287,7 +270,6 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                             ) {
                                 form.bottom_text.value = obj.text;
                             } else {
-
                             }
                         }
                     }
@@ -306,7 +288,6 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
         let obj_state = localStorage.getItem(imageURL);
 
         if (!obj_state) {
-
             canvas.getObjects().forEach((obj) => {
                 if (
                     !(
@@ -348,29 +329,32 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
             form.top_text.value = "";
             form.bottom_text.value = "";
         } else {
-
             canvas.clear();
-
 
             canvas.loadFromJSON(obj_state, function () {
                 canvas.renderAll();
 
                 text_objects = {};
                 canvas.getObjects().forEach((obj) => {
-                     if (obj.type == "rect") {
-                         obj.set({
-                             stay: true,
-                             stay_when_pos: true,
-                             hasControls: false,
-                             selectable: false,
-                             lockMovementX: true,
-                             lockMovementY: true,
-                             lockScalingX: true,
-                             lockScalingY: true,
-                             lockRotation: true,
-                         });
-                     }
-                    if (obj._originalElement.src.includes("color")) {
+                    if (obj.type == "rect") {
+                        obj.set({
+                            stay: true,
+                            stay_when_pos: true,
+                            hasControls: false,
+                            selectable: false,
+                            lockMovementX: true,
+                            lockMovementY: true,
+                            lockScalingX: true,
+                            lockScalingY: true,
+                            lockRotation: true,
+                        });
+                    }
+
+                    console.log("obj: ", obj._originalElement);
+                    if (
+                        obj._originalElement &&
+                        obj._originalElement.src.includes("color")
+                    ) {
                         obj.set({
                             selectable: false,
                             hasControls: false,
@@ -383,6 +367,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
 
                     if (
                         obj.type == "image" &&
+                        obj._originalElement &&
                         obj._originalElement.src.includes("clipart")
                     ) {
                         obj.set({
@@ -711,8 +696,17 @@ function handleInlineTextInputs(objects) {
 }
 
 function initProductImage() {
-    if (localStorage.getItem(product_image.src)) {
-        let obj_state = localStorage.getItem(product_image.src);
+    let color_btns = document.querySelectorAll(".color-option");
+    let first_color = color_btns[0];
+    let first_front_image = first_color.getAttribute("data-front-image");
+    state.current_image_url = first_front_image;
+    selectedFrontImage = first_front_image;
+    selectedBackImage = first_color.getAttribute("data-back-image");
+    state.front_image_url = first_front_image;
+    state.back_image_url = selectedBackImage;
+
+    if (localStorage.getItem(first_front_image)) {
+        let obj_state = localStorage.getItem(first_front_image);
         canvas.loadFromJSON(obj_state, function () {
             canvas.renderAll();
             canvas.getObjects().forEach((obj) => {
@@ -727,7 +721,7 @@ function initProductImage() {
         });
     }
 
-    fabric.Image.fromURL(product_image.src, function (img) {
+    fabric.Image.fromURL(first_front_image, function (img) {
         let scale = Math.min(
             canvas.width / img.width,
             canvas.height / img.height
@@ -748,6 +742,8 @@ function initProductImage() {
 
         canvas.sendToBack(img);
     });
+
+    save_state(state.current_image_url);
 }
 
 function sidebarHandler() {
@@ -925,7 +921,6 @@ function handleDesignSave() {
 }
 
 function saveDesignAndImage(side, rand_key) {
-
     try {
         localStorage.setItem(
             `${rand_key}.${side}_design`,
@@ -946,7 +941,16 @@ function saveDesignAndImage(side, rand_key) {
         });
 
         removed_objects.forEach((obj) => {
-            canvas.add(obj);
+            obj.set({
+                selectable: false,
+                hasControls: false,
+                evented: false,
+                stay: true,
+                stay_when_pos: true,
+            });
+
+            originalAdd(obj);
+            canvas.renderAll();
         });
 
         try {
@@ -980,17 +984,17 @@ function clearOldDesigns(currentKey) {
     keysToRemove.forEach((key) => {
         localStorage.removeItem(key);
     });
-
 }
 
 function showButtons(rand_key) {
+    // show preview button
+    // const preview_btn = document.querySelector("#previewDesign");
+    // preview_btn.style.display = "block";
+    // const previewURL = `${window.location.origin}/preview/${rand_key}`;
+    // preview_btn.href = previewURL;
+    // preview_btn.target = "_blank";
 
-    const preview_btn = document.querySelector("#previewDesign");
-    preview_btn.style.display = "block";
-    const previewURL = `${window.location.origin}/preview/${rand_key}`;
-    preview_btn.href = previewURL;
-    preview_btn.target = "_blank";
-
+    // show add to cart button
     const add_to_cart_btn = document.querySelector("#addToCart");
     add_to_cart_btn.style.display = "block";
 }
@@ -1022,14 +1026,13 @@ function handleAddToCart() {
             formData.append("product_id", form.product_id);
             formData.append("v_hash", form.v_hash);
             formData.append("quantity", form.quantity);
+            formData.append("default_img", form.default_img);
 
             axios
                 .post("/cart", formData)
                 .then((response) => {
-
                     alert("Item successfully added to cart");
                 })
-                .catch((error) => {
-                });
+                .catch((error) => {});
         });
 }

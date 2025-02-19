@@ -80,7 +80,6 @@ class CartController extends Controller
             }
 
             return back()->with('success', 'Item added to cart successfully!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Cart creation failed: ' . $e->getMessage());
@@ -158,5 +157,10 @@ class CartController extends Controller
         }
 
         return response()->json(['success' => 'All items removed from cart successfully!'], 200);
+    }
+
+    public function show()
+    {
+        // TODO: Implement this method
     }
 }
