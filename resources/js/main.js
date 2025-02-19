@@ -164,9 +164,11 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
     state.current_image_url = imageURL;
 
     if (type === "pos") {
+        console.log("pos");
         let obj_state = localStorage.getItem(imageURL);
 
         if (!obj_state) {
+            console.log("no state");
             canvas.getObjects().forEach((obj) => {
                 if (
                     !(
@@ -205,6 +207,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                 localStorage.setItem(imageURL, JSON.stringify(canvas));
             });
         } else {
+            console.log("state is: ");
             canvas.clear();
             canvas.loadFromJSON(obj_state, function () {
                 canvas.renderAll();
@@ -285,9 +288,11 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
 
     // HANDLING COLOR SWITCH
     if (type == "color") {
+        console.log("color");
         let obj_state = localStorage.getItem(imageURL);
 
         if (!obj_state) {
+            console.log("no state")
             canvas.getObjects().forEach((obj) => {
                 if (
                     !(
@@ -329,8 +334,10 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
             form.top_text.value = "";
             form.bottom_text.value = "";
         } else {
+            console.log("state")
             canvas.clear();
 
+            console.log(obj_state);
             canvas.loadFromJSON(obj_state, function () {
                 canvas.renderAll();
 
@@ -741,9 +748,9 @@ function initProductImage() {
         });
 
         canvas.sendToBack(img);
+        save_state(state.current_image_url);
     });
 
-    save_state(state.current_image_url);
 }
 
 function sidebarHandler() {
