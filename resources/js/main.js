@@ -7,6 +7,8 @@ const canvas = new fabric.Canvas("tshirtCanvas");
 const product_image = document.querySelector("#product-image");
 const designArea = document.querySelector("#design-area");
 const product_type = product_image.getAttribute("data-type");
+const default_stroke_width = 2;
+const default_stoke_fill = "#ccc";
 
 const rand_key = Math.random().toString(36).substring(7);
 
@@ -60,6 +62,108 @@ function initGlobalEvents() {
     canvas.on("object:modified", function (e) {
         save_state(state.current_image_url);
     });
+
+    canvas.on("selection:created", function (e) {
+        let canvas_defaults = getCanvasDefaults(canvas);
+        const params = {
+            ...canvas_defaults[product_type].box,
+        };
+        canvas.getObjects().forEach((obj) => {
+            console.log("obj:", obj);
+
+            if (obj && obj.type == "rect") {
+                obj.set({
+                    ...params,
+                    stroke: "#ccc",
+                    strokeWidth: 2,
+                });
+                canvas.renderAll();
+            }
+        });
+    });
+
+    canvas.on("selection:cleared", function () {
+        canvas.getObjects().forEach((obj) => {
+            if (obj && obj.type == "rect") {
+                obj.set({
+                    strokeWidth: 0,
+                    stroke: "",
+                });
+            }
+        });
+    });
+}
+
+function addInnerBorder() {
+    let canvas_defaults = getCanvasDefaults(canvas);
+    const params = {
+        ...canvas_defaults[product_type].box,
+    };
+    let boundingBox = new fabric.Rect({
+        ...params,
+        strokeWidth: 0,
+        hasControls: false,
+        lockMovementX: true,
+        lockMovementY: true,
+        lockScalingX: true,
+        lockScalingY: true,
+        lockRotation: true,
+    });
+    canvas.add(boundingBox);
+
+    let clipPath = new fabric.Rect({
+        left: params.left,
+        top: params.top,
+        width: params.width,
+        height: params.height,
+        originX: "center",
+        originY: "center",
+        absolutePositioned: true,
+        stay: params.stay,
+        stay_when_pos: true,
+        hasControls: false,
+        lockMovementX: true,
+        lockMovementY: true,
+        lockScalingX: true,
+        lockScalingY: true,
+        lockRotation: true,
+    });
+
+    designGroup = new fabric.Group([], {
+        left: 0,
+        top: 0,
+        clipPath: clipPath,
+        selectable: false,
+        evented: true,
+        subTargetCheck: true,
+        interactive: true,
+        stay: params.stay,
+        stay_when_pos: true,
+        hasControls: false,
+        lockMovementX: true,
+        lockMovementY: true,
+        lockScalingX: true,
+        lockScalingY: true,
+        lockRotation: true,
+    });
+
+    canvas.add(designGroup);
+    canvas.designGroup = designGroup;
+
+    originalAdd = canvas.add.bind(canvas);
+    canvas.add = function (...objects) {
+        objects.forEach((obj) => {
+            if (obj !== boundingBox && !obj.excludeFromClipping) {
+                obj.clipPath = clipPath;
+                originalAdd(obj);
+            } else {
+                originalAdd(obj);
+            }
+        });
+        canvas.renderAll();
+        save_state(state.current_image_url);
+        return canvas;
+    };
 }
 
 function initForm() {
@@ -153,6 +257,25 @@ function enableFormElements() {
     });
 }
 
+function showBorder(obj) {
+    let canvas_defaults = getCanvasDefaults(canvas);
+    const params = {
+        ...canvas_defaults[product_type].box,
+    };
+    obj.set({
+        ...params,
+        stroke: default_stoke_fill,
+        strokeWidth: default_stroke_width,
+    });
+}
+
+function hideBorder(obj) {
+    obj.set({
+        stroke: "",
+        strokeWidth: 0,
+    });
+}
+
 function loadImage(imageURL, type = "color", backImageURL = "") {
     if (!imageURL) return;
 
@@ -178,6 +301,10 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                     )
                 ) {
                     canvas.remove(obj);
+                }
+
+                if (obj.type == "rect") {
+                    hideBorder(obj);
                 }
             });
 
@@ -226,6 +353,8 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                             lockScalingY: true,
                             lockRotation: true,
                         });
+
+                        hideBorder(obj);
                     }
 
                     if (
@@ -292,7 +421,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
         let obj_state = localStorage.getItem(imageURL);
 
         if (!obj_state) {
-            console.log("no state")
+            console.log("no state");
             canvas.getObjects().forEach((obj) => {
                 if (
                     !(
@@ -303,6 +432,10 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                     )
                 ) {
                     canvas.remove(obj);
+                }
+
+                if (obj.type == "rect") {
+                    hideBorder(obj);
                 }
             });
 
@@ -334,7 +467,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
             form.top_text.value = "";
             form.bottom_text.value = "";
         } else {
-            console.log("state")
+            console.log("state");
             canvas.clear();
 
             console.log(obj_state);
@@ -355,9 +488,9 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                             lockScalingY: true,
                             lockRotation: true,
                         });
-                    }
 
-                    console.log("obj: ", obj._originalElement);
+                        hideBorder(obj);
+                    }
                     if (
                         obj._originalElement &&
                         obj._originalElement.src.includes("color")
@@ -425,77 +558,6 @@ function handleDeleteOnKeyDown() {
             }
         }
     });
-}
-
-function addInnerBorder() {
-    let canvas_defaults = getCanvasDefaults(canvas);
-    const params = {
-        ...canvas_defaults[product_type].box,
-    };
-    let boundingBox = new fabric.Rect({
-        ...params,
-        hasControls: false,
-        lockMovementX: true,
-        lockMovementY: true,
-        lockScalingX: true,
-        lockScalingY: true,
-        lockRotation: true,
-    });
-    canvas.add(boundingBox);
-
-    let clipPath = new fabric.Rect({
-        left: params.left,
-        top: params.top,
-        width: params.width,
-        height: params.height,
-        originX: "center",
-        originY: "center",
-        absolutePositioned: true,
-        stay: params.stay,
-        stay_when_pos: true,
-        hasControls: false,
-        lockMovementX: true,
-        lockMovementY: true,
-        lockScalingX: true,
-        lockScalingY: true,
-        lockRotation: true,
-    });
-
-    designGroup = new fabric.Group([], {
-        left: 0,
-        top: 0,
-        clipPath: clipPath,
-        selectable: false,
-        evented: true,
-        subTargetCheck: true,
-        interactive: true,
-        stay: params.stay,
-        stay_when_pos: true,
-        hasControls: false,
-        lockMovementX: true,
-        lockMovementY: true,
-        lockScalingX: true,
-        lockScalingY: true,
-        lockRotation: true,
-    });
-
-    canvas.add(designGroup);
-    canvas.designGroup = designGroup;
-
-    originalAdd = canvas.add.bind(canvas);
-    canvas.add = function (...objects) {
-        objects.forEach((obj) => {
-            if (obj !== boundingBox && !obj.excludeFromClipping) {
-                obj.clipPath = clipPath;
-                originalAdd(obj);
-            } else {
-                originalAdd(obj);
-            }
-        });
-        canvas.renderAll();
-        save_state(state.current_image_url);
-        return canvas;
-    };
 }
 
 // _______________________________________________________________________
@@ -750,7 +812,6 @@ function initProductImage() {
         canvas.sendToBack(img);
         save_state(state.current_image_url);
     });
-
 }
 
 function sidebarHandler() {

@@ -159,8 +159,15 @@ class CartController extends Controller
         return response()->json(['success' => 'All items removed from cart successfully!'], 200);
     }
 
-    public function show()
+    public function show($id)
     {
-        // TODO: Implement this methodn
+
+        $cart_item = DB::table('carts')->where('id', $id)->first();
+
+        $images = (object) [];
+        $images->first_image = Storage::url($cart_item->design_front_image);
+        $images->second_image = Storage::url($cart_item->design_back_image);
+
+        return view('cart.show', ['images' => $images]);
     }
 }

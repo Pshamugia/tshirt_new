@@ -26,10 +26,10 @@ const getCanvasDefaults = (canvas) => {
 
         shirt: {
             box: {
-                strokeWidth: 2,
+                // strokeWidth: 2,
                 strokeDashArray: [5, 5],
                 fill: "transparent",
-                stroke: "#ccc",
+                // stroke: "#ccc",
                 selectable: false,
                 evented: false,
                 stay: true,
@@ -45,10 +45,10 @@ const getCanvasDefaults = (canvas) => {
 
         hat: {
             box: {
-                strokeWidth: 2,
+                // strokeWidth: 2,
                 strokeDashArray: [5, 5],
                 fill: "transparent",
-                stroke: "#ccc",
+                // stroke: "#ccc",
                 selectable: false,
                 evented: false,
                 stay: true,
