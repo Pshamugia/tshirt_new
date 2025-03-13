@@ -277,6 +277,7 @@ function hideBorder(obj) {
 }
 
 function loadImage(imageURL, type = "color", backImageURL = "") {
+    console.log("loadImage fired");
     if (!imageURL) return;
 
     if (state.current_image_url == imageURL) {
@@ -285,7 +286,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
 
     // STATE
     state.current_image_url = imageURL;
-
+    // console.log("state.current_image_url: ", state.current_image_url);
     if (type === "pos") {
         console.log("pos");
         let obj_state = localStorage.getItem(imageURL);
@@ -439,6 +440,7 @@ function loadImage(imageURL, type = "color", backImageURL = "") {
                 }
             });
 
+            console.log("came here");
             fabric.Image.fromURL(imageURL, function (img) {
                 let scale = Math.min(
                     canvas.width / img.width,
@@ -768,50 +770,21 @@ function initProductImage() {
     let color_btns = document.querySelectorAll(".color-option");
     let first_color = color_btns[0];
     let first_front_image = first_color.getAttribute("data-front-image");
-    state.current_image_url = first_front_image;
-    selectedFrontImage = first_front_image;
-    selectedBackImage = first_color.getAttribute("data-back-image");
-    state.front_image_url = first_front_image;
-    state.back_image_url = selectedBackImage;
 
     if (localStorage.getItem(first_front_image)) {
-        let obj_state = localStorage.getItem(first_front_image);
-        canvas.loadFromJSON(obj_state, function () {
-            canvas.renderAll();
-            canvas.getObjects().forEach((obj) => {
-                if (obj.type === "textbox") {
-                    if (obj.top < canvas.height / 2) {
-                        text_objects["top_text"] = obj;
-                    } else {
-                        text_objects["bottom_text"] = obj;
-                    }
-                }
-            });
-        });
-    }
-
-    fabric.Image.fromURL(first_front_image, function (img) {
-        let scale = Math.min(
-            canvas.width / img.width,
-            canvas.height / img.height
+        loadImage(
+            first_front_image,
+            "color",
+            first_color.getAttribute("data-back-image")
         );
-
-        img.set({
-            left: canvas.width / 2,
-            top: canvas.height / 2,
-            originX: "center",
-            originY: "center",
-            scaleX: scale,
-            scaleY: scale,
-            selectable: false,
-            hasControls: false,
-            excludeFromClipping: true,
-            product_image: true,
-        });
-
-        canvas.sendToBack(img);
-        save_state(state.current_image_url);
-    });
+    } else {
+        // state.current_image_url = first_front_image;
+        selectedFrontImage = first_front_image;
+        selectedBackImage = first_color.getAttribute("data-back-image");
+        state.front_image_url = first_front_image;
+        state.back_image_url = selectedBackImage;
+        loadImage(first_front_image, "color", selectedBackImage);
+    }
 }
 
 function sidebarHandler() {
@@ -1055,14 +1028,6 @@ function clearOldDesigns(currentKey) {
 }
 
 function showButtons(rand_key) {
-    // show preview button
-    // const preview_btn = document.querySelector("#previewDesign");
-    // preview_btn.style.display = "block";
-    // const previewURL = `${window.location.origin}/preview/${rand_key}`;
-    // preview_btn.href = previewURL;
-    // preview_btn.target = "_blank";
-
-    // show add to cart button
     const add_to_cart_btn = document.querySelector("#addToCart");
     add_to_cart_btn.style.display = "block";
 }
